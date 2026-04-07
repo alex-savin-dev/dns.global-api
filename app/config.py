@@ -3,7 +3,6 @@
 All settings are loaded from environment variables. See .env.example for documentation.
 """
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -14,20 +13,21 @@ class Settings(BaseSettings):
     all vars are documented in .env.example.
     """
 
-    # --- Database ---
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/dnsglobal"
+    # --- Database (REQUIRED — no default; misconfigured deploys must fail fast) ---
+    database_url: str
 
-    # --- Redis ---
-    redis_url: str = "redis://localhost:6379/0"
+    # --- Redis (REQUIRED) ---
+    redis_url: str
 
-    # --- Security ---
-    credential_encryption_key: str = ""  # AES-256 key, Phase 1 from env var
+    # --- Security (REQUIRED) ---
+    credential_encryption_key: str  # AES-256 key, Phase 1 from env var
 
     # --- Environment ---
     environment: str = "development"  # development | staging | production
 
     # --- CORS ---
-    # Accepts comma-separated string from env/dotenv or a JSON array.
+    # Stored as comma-separated string because pydantic-settings v2 dotenv source
+    # cannot coerce empty strings into list[str]. Use cors_origins_list to consume.
     cors_allowed_origins: str = ""
 
     @property
@@ -54,4 +54,4 @@ class Settings(BaseSettings):
 
 
 # Singleton settings instance — import this from other modules
-settings = Settings()
+settings = Settings()  # type: ignore[call-arg]

@@ -29,11 +29,15 @@ async_session_factory = async_sessionmaker(
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Dependency that yields an async DB session and commits/rolls back."""
+    """Dependency that yields an async DB session.
+
+    Endpoints are responsible for calling ``await session.commit()`` when
+    they have made changes that should be persisted. On any unhandled
+    exception the session is rolled back automatically.
+    """
     async with async_session_factory() as session:
         try:
             yield session
-            await session.commit()
         except Exception:
             await session.rollback()
             raise

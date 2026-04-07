@@ -69,9 +69,11 @@ def setup_logging() -> None:
     root_logger.addHandler(handler)
     root_logger.setLevel(settings.log_level.upper())
 
-    # Suppress noisy third-party loggers
-    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+    # Suppress noisy third-party loggers — but never below the configured level
+    app_level = logging.getLevelName(settings.log_level.upper())
+    noisy_level = max(app_level, logging.WARNING) if isinstance(app_level, int) else logging.WARNING
+    logging.getLogger("uvicorn.access").setLevel(noisy_level)
+    logging.getLogger("sqlalchemy.engine").setLevel(noisy_level)
 
 
 def get_logger(name: str) -> logging.Logger:

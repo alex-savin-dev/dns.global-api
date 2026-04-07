@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Text, func
+from sqlalchemy import DateTime, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,15 +14,15 @@ class Tenant(Base):
     __tablename__ = "tenants"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     public_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     secret_key_hash: Mapped[str] = mapped_column(Text, nullable=False)
-    webhook_urls: Mapped[dict] = mapped_column(JSONB, server_default="'[]'::jsonb")
+    webhook_urls: Mapped[list] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
     webhook_secret: Mapped[str] = mapped_column(Text, nullable=False)
     template: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    widget_config: Mapped[dict] = mapped_column(JSONB, server_default="'{}'::jsonb")
+    widget_config: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
     plan: Mapped[str] = mapped_column(Text, server_default="free")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

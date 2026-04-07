@@ -3,6 +3,7 @@
 All settings are loaded from environment variables. See .env.example for documentation.
 """
 
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -20,7 +21,16 @@ class Settings(BaseSettings):
     redis_url: str
 
     # --- Security (REQUIRED) ---
-    credential_encryption_key: str  # AES-256 key, Phase 1 from env var
+    # AES-256 key (Phase 1 from env var). Must be a non-empty value of at
+    # least 32 characters so deployments can't silently start with a placeholder.
+    credential_encryption_key: str = Field(min_length=32)
+
+    @field_validator("credential_encryption_key")
+    @classmethod
+    def _no_blank_key(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("CREDENTIAL_ENCRYPTION_KEY must not be empty")
+        return v
 
     # --- Environment ---
     environment: str = "development"  # development | staging | production

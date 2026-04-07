@@ -16,11 +16,11 @@ class RecordProvenance(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
-    connection_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("domain_connections.id"), nullable=True
+    connection_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("domain_connections.id"), nullable=False, index=True
     )
-    operation_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("operations.id"), nullable=True
+    operation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("operations.id"), nullable=False
     )
     record_type: Mapped[str] = mapped_column(Text, nullable=False)
     record_host: Mapped[str] = mapped_column(Text, nullable=False)

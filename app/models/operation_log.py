@@ -16,8 +16,8 @@ class OperationLog(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
-    operation_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("operations.id"), nullable=True
+    operation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("operations.id"), nullable=False, index=True
     )
     state_from: Mapped[str | None] = mapped_column(Text, nullable=True)
     state_to: Mapped[str | None] = mapped_column(Text, nullable=True)

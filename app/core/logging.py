@@ -69,9 +69,16 @@ def setup_logging() -> None:
     root_logger.addHandler(handler)
     root_logger.setLevel(settings.log_level.upper())
 
-    # Suppress noisy third-party loggers — but never below the configured level
+    # Honour LOG_LEVEL for noisy third-party loggers in development so the
+    # operator can opt into DEBUG/INFO when they need it; in non-development
+    # environments cap them at WARNING to keep production logs clean.
     app_level = logging.getLevelName(settings.log_level.upper())
-    noisy_level = max(app_level, logging.WARNING) if isinstance(app_level, int) else logging.WARNING
+    if not isinstance(app_level, int):
+        app_level = logging.INFO
+    if settings.environment == "development":
+        noisy_level = app_level
+    else:
+        noisy_level = max(app_level, logging.WARNING)
     logging.getLogger("uvicorn.access").setLevel(noisy_level)
     logging.getLogger("sqlalchemy.engine").setLevel(noisy_level)
 

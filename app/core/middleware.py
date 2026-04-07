@@ -43,10 +43,19 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 def register_middleware(app: FastAPI) -> None:
     """Attach all middleware to the FastAPI app."""
 
-    # CORS — must be added first (outermost)
+    # CORS — must be added first (outermost).
+    # In development we fall back to "*" for convenience, but in any non-dev
+    # environment we strictly use the configured list (empty = no origins).
+    if settings.cors_origins_list:
+        allowed_origins = settings.cors_origins_list
+    elif settings.environment == "development":
+        allowed_origins = ["*"]
+    else:
+        allowed_origins = []
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins_list or ["*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

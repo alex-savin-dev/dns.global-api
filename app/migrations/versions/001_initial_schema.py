@@ -18,8 +18,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Enable pgcrypto for gen_random_uuid() — defensive (built-in since PG 13)
-    op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
+    # gen_random_uuid() is built-in since PG 13, no extension needed.
 
     # --- tenants ---
     op.create_table(
@@ -42,7 +41,7 @@ def upgrade() -> None:
     op.create_table(
         "domain_connections",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("tenant_id", UUID(as_uuid=True), sa.ForeignKey("tenants.id"), nullable=True),
+        sa.Column("tenant_id", UUID(as_uuid=True), sa.ForeignKey("tenants.id"), nullable=False),
         sa.Column("domain", sa.Text(), nullable=False),
         sa.Column("zone", sa.Text(), nullable=True),
         sa.Column("provider", sa.Text(), nullable=True),
@@ -62,7 +61,7 @@ def upgrade() -> None:
         "operations",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("connection_id", UUID(as_uuid=True), sa.ForeignKey("domain_connections.id"), nullable=True),
-        sa.Column("tenant_id", UUID(as_uuid=True), sa.ForeignKey("tenants.id"), nullable=True),
+        sa.Column("tenant_id", UUID(as_uuid=True), sa.ForeignKey("tenants.id"), nullable=False),
         sa.Column("idempotency_key", sa.Text(), nullable=True),
         sa.Column("status", sa.Text(), server_default="pending"),
         sa.Column("change_plan", JSONB(), nullable=True),
@@ -80,8 +79,8 @@ def upgrade() -> None:
     op.create_table(
         "record_provenance",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("connection_id", UUID(as_uuid=True), sa.ForeignKey("domain_connections.id"), nullable=True),
-        sa.Column("operation_id", UUID(as_uuid=True), sa.ForeignKey("operations.id"), nullable=True),
+        sa.Column("connection_id", UUID(as_uuid=True), sa.ForeignKey("domain_connections.id"), nullable=False),
+        sa.Column("operation_id", UUID(as_uuid=True), sa.ForeignKey("operations.id"), nullable=False),
         sa.Column("record_type", sa.Text(), nullable=False),
         sa.Column("record_host", sa.Text(), nullable=False),
         sa.Column("record_value", sa.Text(), nullable=False),
@@ -94,7 +93,7 @@ def upgrade() -> None:
     op.create_table(
         "operation_log",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("operation_id", UUID(as_uuid=True), sa.ForeignKey("operations.id"), nullable=True),
+        sa.Column("operation_id", UUID(as_uuid=True), sa.ForeignKey("operations.id"), nullable=False),
         sa.Column("state_from", sa.Text(), nullable=True),
         sa.Column("state_to", sa.Text(), nullable=True),
         sa.Column("detail", JSONB(), nullable=True),
@@ -106,8 +105,8 @@ def upgrade() -> None:
     op.create_table(
         "webhook_deliveries",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("tenant_id", UUID(as_uuid=True), sa.ForeignKey("tenants.id"), nullable=True),
-        sa.Column("operation_id", UUID(as_uuid=True), sa.ForeignKey("operations.id"), nullable=True),
+        sa.Column("tenant_id", UUID(as_uuid=True), sa.ForeignKey("tenants.id"), nullable=False),
+        sa.Column("operation_id", UUID(as_uuid=True), sa.ForeignKey("operations.id"), nullable=False),
         sa.Column("event", sa.Text(), nullable=False),
         sa.Column("payload", JSONB(), nullable=False),
         sa.Column("status", sa.Text(), server_default="pending"),
@@ -125,7 +124,7 @@ def upgrade() -> None:
         "sessions",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("token_hash", sa.Text(), nullable=False),
-        sa.Column("tenant_id", UUID(as_uuid=True), sa.ForeignKey("tenants.id"), nullable=True),
+        sa.Column("tenant_id", UUID(as_uuid=True), sa.ForeignKey("tenants.id"), nullable=False),
         sa.Column("user_id", sa.Text(), nullable=True),
         sa.Column("domain", sa.Text(), nullable=True),
         sa.Column("nonce", sa.Text(), nullable=False),
